@@ -15,7 +15,7 @@ const PERSPECTIVE_VERTICAL_CENTER = Math.round(scene.screenHeight() / 3);
 const Z_PERSPECTIVE_FACTOR = 20;
 const MAX_NUM_OF_OBSTACLES = (STRIPTES_VIEW_PORT - 2) * 2;
 
-const CAR_SPEED_FACTOR = 1000;
+const CAR_SPEED_FACTOR = 2000;
 const CAR_VIEWPORT = Math.idiv(scene.screenWidth(), 7);
 const CAR_X_MOVE_RANGE = Math.round(STRIPE_WIDTH * 1.4);
 // --- End game rendering configuration

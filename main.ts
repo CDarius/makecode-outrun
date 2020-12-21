@@ -88,7 +88,8 @@ const BACKDROP_IMG = img`
 `;
     
 game.stats = true;
-info.startCountdown(60)
+info.setScore(0);
+info.startCountdown(60);
 
 const carSprite = sprites.create(CAR_IMG_STRAIGHT);
 carSprite.setPosition(80, 105);
@@ -117,6 +118,7 @@ game.onUpdate(function() {
 });
 
 game.onPaint(function() {
+    // Update travel distance
     const now = game.runtime();
     const deltaTime = now - lastRun;
     lastRun = now;
@@ -129,6 +131,10 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
     game.reset()
 });
 
+game.onUpdateInterval(200, function() {
+    // Uppdate score based on travel distance and CAR_SPEED_FACTOR
+    info.changeScoreBy(Math.idiv(carSpeed, 10));
+});
 
 controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
     //carTraveledDistance += 1;        
@@ -139,4 +145,4 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
 });
 
 pause(2000);
-carSpeed = 100;
+carSpeed = 293;
