@@ -5,9 +5,12 @@
         "device": "*"
     },
     "files": [
-        "main.blocks",
         "main.ts",
-        "README.md"
+        "README.md",
+        "mathconst.ts",
+        "obstacles.ts",
+        "circuit.ts",
+        "worldrenderengine.ts"
     ],
     "testFiles": [
         "test.ts"
