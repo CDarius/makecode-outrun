@@ -90,6 +90,7 @@ const BACKDROP_IMG = img`
 game.stats = true;
 info.setScore(0);
 info.startCountdown(60);
+info.showScore(false);
 
 const carSprite = sprites.create(CAR_IMG_STRAIGHT);
 carSprite.setPosition(80, 105);
@@ -101,6 +102,13 @@ let carTraveledDistance = 0;
 let lastRun = game.runtime();
 
 const renderEngine = new WorldRenderEngine(carSprite);
+const doubledFont = image.scaledFont(image.font8, 2);
+const speedTextLabel = new TextRender("SPEED", 1, 3);
+const speedTextValue = new TextRender(carSpeed.toString(), 1, 3, doubledFont);
+const countDownLabel = new TextRender("TIME", 1, 3);
+const countDownValue = new TextRender("0", 1, 3, doubledFont);
+const scoreTextLabel = new TextRender("SCORE", 1, 3);
+const scoreTextValue = new TextRender(info.score().toString(), 1, 3, doubledFont);
 
 
 game.onUpdate(function() {
@@ -124,7 +132,17 @@ game.onPaint(function() {
     lastRun = now;
     carTraveledDistance += carSpeed * deltaTime / CAR_SPEED_FACTOR;
     
+    const backgroundImg = scene.backgroundImage();
     renderEngine.renderGame(Math.round(carTraveledDistance), carXPos);
+
+    // Draw HUD
+    speedTextValue.setText(carSpeed.toString());
+    scoreTextValue.setText(info.score().toString());
+    speedTextLabel.draw(backgroundImg, 1, 1);
+    speedTextValue.draw(backgroundImg, 1, speedTextLabel.height() + 2);
+    scoreTextLabel.draw(backgroundImg, backgroundImg.width - 2, 1, TextAlignment.Right)
+    scoreTextValue.draw(backgroundImg, backgroundImg.width - 2, scoreTextLabel.height() + 2, TextAlignment.Right);
+
 });
 
 controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
@@ -132,8 +150,8 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
 });
 
 game.onUpdateInterval(200, function() {
-    // Uppdate score based on travel distance and CAR_SPEED_FACTOR
-    info.changeScoreBy(Math.idiv(carSpeed, 10));
+    info.changeScoreBy(Math.idiv(carSpeed, 20));
+    info.showScore(false);
 });
 
 controller.A.onEvent(ControllerButtonEvent.Pressed, function() {

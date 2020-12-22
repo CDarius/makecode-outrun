@@ -10,7 +10,8 @@
         "mathconst.ts",
         "obstacles.ts",
         "circuit.ts",
-        "worldrenderengine.ts"
+        "worldrenderengine.ts",
+        "textrender.ts"
     ],
     "testFiles": [
         "test.ts"
