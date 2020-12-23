@@ -67,7 +67,6 @@ const CAR_IMG_RIGHT = img`
     .ffffffff.....................ffffffff......
     ..ffffff.......................ffffff.......
 `
-
 const BACKDROP_IMG = img`
     ................................................................................................................................................................
     .........................................................................6666b..................................................................................
@@ -85,12 +84,13 @@ const BACKDROP_IMG = img`
     666969666666666666666669666666666d666667666666666d6666b66466969666666666646666666666666666666b6b6b6b66666466666666.....6666666b4666666..66666666666646e666666b66
     6666666666d666666666666666666666666646666666666666666666666666666666666666666666666666664666666666b666666666666646666666666b46666666b466666666666666666666666666
     6d66666666666666646666666d666b6666b666b66b6b66b666b66666b66b6b6b66b6666b6666b66b6b6b6b6b6b66b666b6666b66b666b6b6b6b6b6b6b666666b6666666666b6b6b66b666b666b666b66
-`;
+`
     
 game.stats = true;
 info.setScore(0);
-info.startCountdown(60);
 info.showScore(false);
+const countdown = new Countdown();
+countdown.load(60);
 
 const carSprite = sprites.create(CAR_IMG_STRAIGHT);
 carSprite.setPosition(80, 105);
@@ -106,7 +106,7 @@ const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
 const speedTextValue = new TextRender(carSpeed.toString(), 1, 3, doubledFont);
 const countDownLabel = new TextRender("TIME", 1, 3);
-const countDownValue = new TextRender("0", 1, 3, doubledFont);
+const countDownValue = new TextRender(countdown.remainingTime().toString(), 1, 3, doubledFont);
 const scoreTextLabel = new TextRender("SCORE", 1, 3);
 const scoreTextValue = new TextRender(info.score().toString(), 1, 3, doubledFont);
 
@@ -123,6 +123,8 @@ game.onUpdate(function() {
     else
         carSprite.setImage(CAR_IMG_STRAIGHT);
 
+    if (countdown.isExpired())    
+        game.over();
 });
 
 game.onPaint(function() {
@@ -137,9 +139,12 @@ game.onPaint(function() {
 
     // Draw HUD
     speedTextValue.setText(carSpeed.toString());
+    countDownValue.setText(countdown.remainingTime().toString());
     scoreTextValue.setText(info.score().toString());
     speedTextLabel.draw(backgroundImg, 1, 1);
     speedTextValue.draw(backgroundImg, 1, speedTextLabel.height() + 2);
+    countDownLabel.draw(backgroundImg, SCREEN_HALF_WIDTH, 1, TextAlignment.Center);
+    countDownValue.draw(backgroundImg, SCREEN_HALF_WIDTH, countDownLabel.height() + 2, TextAlignment.Center);
     scoreTextLabel.draw(backgroundImg, backgroundImg.width - 2, 1, TextAlignment.Right)
     scoreTextValue.draw(backgroundImg, backgroundImg.width - 2, scoreTextLabel.height() + 2, TextAlignment.Right);
 
@@ -163,4 +168,5 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
 });
 
 pause(2000);
+countdown.start();
 carSpeed = 293;

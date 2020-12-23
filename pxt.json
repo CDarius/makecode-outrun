@@ -11,7 +11,8 @@
         "obstacles.ts",
         "circuit.ts",
         "worldrenderengine.ts",
-        "textrender.ts"
+        "textrender.ts",
+        "countdown.ts"
     ],
     "testFiles": [
         "test.ts"
