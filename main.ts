@@ -99,9 +99,10 @@ carSprite.z = LAYER_PLAYER;
 let carSpeed = 0;
 let carXPos = 0;
 let carTraveledDistance = 0;
+let perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
 let lastRun = game.runtime();
 
-const renderEngine = new WorldRenderEngine(carSprite);
+const worldRender = new WorldRenderEngine();
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
 const speedTextValue = new TextRender(carSpeed.toString(), 1, 3, doubledFont);
@@ -116,6 +117,26 @@ game.onUpdate(function() {
     const carStreeringWheel = controller.dx(40);
     carXPos = Math.constrain(carXPos + carStreeringWheel, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
 
+    // Place player car and set camera center
+    if (carXPos >= 0) {
+        if (carXPos > CAR_VIEWPORT) {
+            carSprite.x = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
+            perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT - carXPos;
+        } else {
+            carSprite.x = SCREEN_HALF_WIDTH + carXPos;
+            perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
+        }
+    } else {
+        if (carXPos < (-CAR_VIEWPORT)) {
+            carSprite.x = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
+            perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT - carXPos;
+        } else {
+            carSprite.x =  SCREEN_HALF_WIDTH + carXPos;
+            perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
+        }
+    }
+
+    // Car turn animation
     if (carStreeringWheel < 0)
         carSprite.setImage(CAR_IMG_LEFT);
     else if (carStreeringWheel > 0)
@@ -123,6 +144,7 @@ game.onUpdate(function() {
     else
         carSprite.setImage(CAR_IMG_STRAIGHT);
 
+    // Time over game end
     if (countdown.isExpired())    
         game.over();
 });
@@ -135,7 +157,7 @@ game.onPaint(function() {
     carTraveledDistance += carSpeed * deltaTime / CAR_SPEED_FACTOR;
     
     const backgroundImg = scene.backgroundImage();
-    renderEngine.renderGame(Math.round(carTraveledDistance), carXPos);
+    worldRender.draw(backgroundImg, Math.round(carTraveledDistance), perspectiveHorizontalCenter);
 
     // Draw HUD
     speedTextValue.setText(carSpeed.toString());

@@ -23,46 +23,25 @@ class WorldRenderEngine {
     private roadY: number;
     private stripeToggle: boolean;
     private backdropOffset: number;
-
     private perspectiveHorizontalCenter: number;
 
-    private carSprite: Sprite;
     private obstaclesToRenders: RenderObstacle[];
 
-    constructor(carSprite: Sprite) {
+    constructor() {
         this.sinTable = this.createSinTableFP();
-        this.carSprite = carSprite;
         this.backdropOffset = 0;
     }
 
-    public renderGame(travelDistance: number, carXPos: number): boolean {
+    public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
         const firstStripe = Math.idiv(travelDistance, STRIPE_HEIGHT);
         const firstStripeOffeset = travelDistance % STRIPE_HEIGHT;
         const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
-        const renderTarget = scene.backgroundImage();
 
         if (firstStripeIndex + STRIPTES_VIEW_PORT * CIRCUIT_STRIPE_RECORD_LEN >= CIRCUIT.length)
             return false;
 
-        // Place player car and set camera center
-        if (carXPos >= 0) {
-            if (carXPos > CAR_VIEWPORT) {
-                this.carSprite.x = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
-                this.perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT - carXPos;
-            } else {
-                this.carSprite.x = SCREEN_HALF_WIDTH + carXPos;
-                this.perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
-            }
-        } else {
-            if (carXPos < (-CAR_VIEWPORT)) {
-                this.carSprite.x = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
-                this.perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT - carXPos;
-            } else {
-                this.carSprite.x =  SCREEN_HALF_WIDTH + carXPos;
-                this.perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
-            }
-        }
-
+        this.perspectiveHorizontalCenter = perspectiveHorizontalCenter;
+        
         // Draw the steet
         this.drawZ = 0;
         this.drawY = SCREEN_HEIGHT;
@@ -76,13 +55,13 @@ class WorldRenderEngine {
         for (let i = 0; i < STRIPTES_VIEW_PORT; i++) {
             const circuitIndex = firstStripeIndex + i * CIRCUIT_STRIPE_RECORD_LEN;
             const offset = i == 0 ? firstStripeOffeset : 0;
-            this.drawStripe(circuitIndex, i, renderTarget , offset);
+            this.drawStripe(circuitIndex, i, targetImg , offset);
             this.stripeToggle = !this.stripeToggle;
         }
 
         // Draw the sky
         this.drawY--;
-        renderTarget.fillRect(0, 0, SCREEN_WIDTH, this.drawY , 9);
+        targetImg.fillRect(0, 0, SCREEN_WIDTH, this.drawY , 9);
 
         // Draw backdrop image
         let backdropOffset = this.backdropOffset - (((CIRCUIT[firstStripeIndex] as number) * 2) >> ANGLES_BITS);
@@ -91,9 +70,9 @@ class WorldRenderEngine {
         else if (backdropOffset > SCREEN_WIDTH)
             backdropOffset -= SCREEN_WIDTH;
 
-        renderTarget.drawTransparentImage(BACKDROP_IMG, backdropOffset, this.drawY - BACKDROP_IMG.height);
+        targetImg.drawTransparentImage(BACKDROP_IMG, backdropOffset, this.drawY - BACKDROP_IMG.height);
         if (backdropOffset > 0)
-            renderTarget.drawTransparentImage(BACKDROP_IMG, backdropOffset - BACKDROP_IMG.width, this.drawY - BACKDROP_IMG.height);
+            targetImg.drawTransparentImage(BACKDROP_IMG, backdropOffset - BACKDROP_IMG.width, this.drawY - BACKDROP_IMG.height);
         this.backdropOffset = backdropOffset;
 
         // Display ostacles sprite        
@@ -101,9 +80,9 @@ class WorldRenderEngine {
         for (let i = lastObstacleToRender; i >= 0; i--) {
             const obstacle = this.obstaclesToRenders[i];
             if (obstacle.image.width >= obstacle.image.height)
-                this.drawScaledH(obstacle.image, renderTarget, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
+                this.drawScaledH(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
             else
-                this.drawScaledV(obstacle.image, renderTarget, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
+                this.drawScaledV(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
         }
 
         return true;
