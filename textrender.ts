@@ -112,20 +112,25 @@ class TextRender {
     }
 
     private outline(sourceImg: Image): Image {
-        const resultImg = image.create(sourceImg.width, sourceImg.height);
-
         const thickness = this._font.multiplier ? Math.round(this._font.multiplier) : 1;
-        resultImg.drawImage(sourceImg, -thickness, 0);
-        resultImg.drawTransparentImage(sourceImg, thickness, 0);
-        resultImg.drawTransparentImage(sourceImg, -thickness, -thickness);
-        resultImg.drawTransparentImage(sourceImg, thickness, -thickness);
-        resultImg.drawTransparentImage(sourceImg, -thickness, thickness);
-        resultImg.drawTransparentImage(sourceImg, thickness, thickness);
-        resultImg.drawTransparentImage(sourceImg, 0, -thickness);
-        resultImg.drawTransparentImage(sourceImg, 0, thickness);
+        const doubleThickness = thickness << 1;
+        const resultImg = image.create(sourceImg.width + doubleThickness, sourceImg.height);
+
+        const hl = 0;
+        const hc = thickness;
+        const hr = doubleThickness;
+
+        resultImg.drawImage(sourceImg, hl, 0);
+        resultImg.drawTransparentImage(sourceImg, hr, 0);
+        resultImg.drawTransparentImage(sourceImg, hl, -thickness);
+        resultImg.drawTransparentImage(sourceImg, hr, -thickness);
+        resultImg.drawTransparentImage(sourceImg, hl, thickness);
+        resultImg.drawTransparentImage(sourceImg, hr, thickness);
+        resultImg.drawTransparentImage(sourceImg, hc, -thickness);
+        resultImg.drawTransparentImage(sourceImg, hc, thickness);
 
         resultImg.replace(this._color, this._outlineColor);
-        resultImg.drawTransparentImage(sourceImg, 0, 0);
+        resultImg.drawTransparentImage(sourceImg, hc, 0);
 
         return resultImg;
     }

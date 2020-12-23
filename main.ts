@@ -142,11 +142,11 @@ game.onPaint(function() {
     countDownValue.setText(countdown.remainingTime().toString());
     scoreTextValue.setText(info.score().toString());
     speedTextLabel.draw(backgroundImg, 1, 1);
-    speedTextValue.draw(backgroundImg, 1, speedTextLabel.height() + 2);
+    speedTextValue.draw(backgroundImg, 0, speedTextLabel.height() + 2);
     countDownLabel.draw(backgroundImg, SCREEN_HALF_WIDTH, 1, TextAlignment.Center);
     countDownValue.draw(backgroundImg, SCREEN_HALF_WIDTH, countDownLabel.height() + 2, TextAlignment.Center);
-    scoreTextLabel.draw(backgroundImg, backgroundImg.width - 2, 1, TextAlignment.Right)
-    scoreTextValue.draw(backgroundImg, backgroundImg.width - 2, scoreTextLabel.height() + 2, TextAlignment.Right);
+    scoreTextLabel.draw(backgroundImg, SCREEN_WIDTH - 2, 1, TextAlignment.Right)
+    scoreTextValue.draw(backgroundImg, SCREEN_WIDTH - 1, scoreTextLabel.height() + 2, TextAlignment.Right);
 
 });
 
