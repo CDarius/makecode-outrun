@@ -102,7 +102,7 @@ let carTraveledDistance = 0;
 let perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
 let lastRun = game.runtime();
 
-const worldRender = new WorldRenderEngine();
+const worldRender = new WorldRender();
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
 const speedTextValue = new TextRender(carSpeed.toString(), 1, 3, doubledFont);
