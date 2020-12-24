@@ -12,7 +12,8 @@
         "circuit.ts",
         "textrender.ts",
         "countdown.ts",
-        "worldrender.ts"
+        "worldrender.ts",
+        "carphysics.ts"
     ],
     "testFiles": [
         "test.ts"

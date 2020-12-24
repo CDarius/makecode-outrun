@@ -96,16 +96,16 @@ const carSprite = sprites.create(CAR_IMG_STRAIGHT);
 carSprite.setPosition(80, 105);
 carSprite.z = LAYER_PLAYER;
 
-let carSpeed = 0;
+let running = false;
 let carXPos = 0;
-let carTraveledDistance = 0;
 let perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
-let lastRun = game.runtime();
 
 const worldRender = new WorldRender();
+const carPhysics = new CarPhysics();
+
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
-const speedTextValue = new TextRender(carSpeed.toString(), 1, 3, doubledFont);
+const speedTextValue = new TextRender(carPhysics.speed().toString(), 1, 3, doubledFont);
 const countDownLabel = new TextRender("TIME", 1, 3);
 const countDownValue = new TextRender(countdown.remainingTime().toString(), 1, 3, doubledFont);
 const scoreTextLabel = new TextRender("SCORE", 1, 3);
@@ -113,6 +113,25 @@ const scoreTextValue = new TextRender(info.score().toString(), 1, 3, doubledFont
 
 
 game.onUpdate(function() {
+    // Car turn animation
+    if (controller.left.isPressed())
+        carSprite.setImage(CAR_IMG_LEFT);
+    else if (controller.right.isPressed())
+        carSprite.setImage(CAR_IMG_RIGHT);
+    else
+        carSprite.setImage(CAR_IMG_STRAIGHT);
+
+    // Time over game end
+    if (countdown.isExpired())    
+        game.over();
+});
+
+game.onPaint(function() {
+    if (running)
+        carPhysics.update(controller.A.isPressed(), controller.B.isPressed());
+    else
+        carPhysics.clear();        
+
     // Update car horizontal position
     const carStreeringWheel = controller.dx(40);
     carXPos = Math.constrain(carXPos + carStreeringWheel, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
@@ -136,31 +155,12 @@ game.onUpdate(function() {
         }
     }
 
-    // Car turn animation
-    if (carStreeringWheel < 0)
-        carSprite.setImage(CAR_IMG_LEFT);
-    else if (carStreeringWheel > 0)
-        carSprite.setImage(CAR_IMG_RIGHT);
-    else
-        carSprite.setImage(CAR_IMG_STRAIGHT);
-
-    // Time over game end
-    if (countdown.isExpired())    
-        game.over();
-});
-
-game.onPaint(function() {
-    // Update travel distance
-    const now = game.runtime();
-    const deltaTime = now - lastRun;
-    lastRun = now;
-    carTraveledDistance += carSpeed * deltaTime / CAR_SPEED_FACTOR;
-    
+    // Draw the world
     const backgroundImg = scene.backgroundImage();
-    worldRender.draw(backgroundImg, Math.round(carTraveledDistance), perspectiveHorizontalCenter);
+    worldRender.draw(backgroundImg, carPhysics.traveledDistance() , perspectiveHorizontalCenter);
 
     // Draw HUD
-    speedTextValue.setText(carSpeed.toString());
+    speedTextValue.setText(carPhysics.speed().toString());
     countDownValue.setText(countdown.remainingTime().toString());
     scoreTextValue.setText(info.score().toString());
     speedTextLabel.draw(backgroundImg, 1, 1);
@@ -169,26 +169,13 @@ game.onPaint(function() {
     countDownValue.draw(backgroundImg, SCREEN_HALF_WIDTH, countDownLabel.height() + 2, TextAlignment.Center);
     scoreTextLabel.draw(backgroundImg, SCREEN_WIDTH - 2, 1, TextAlignment.Right)
     scoreTextValue.draw(backgroundImg, SCREEN_WIDTH - 1, scoreTextLabel.height() + 2, TextAlignment.Right);
-
-});
-
-controller.B.onEvent(ControllerButtonEvent.Pressed, function() {
-    game.reset()
 });
 
 game.onUpdateInterval(200, function() {
-    info.changeScoreBy(Math.idiv(carSpeed, 20));
+    info.changeScoreBy(Math.idiv(carPhysics.speed(), 20));
     info.showScore(false);
-});
-
-controller.A.onEvent(ControllerButtonEvent.Pressed, function() {
-    //carTraveledDistance += 1;        
-    if (carSpeed > 0)
-         carSpeed = 0;
-    else
-        carSpeed = 100;
 });
 
 pause(2000);
 countdown.start();
-carSpeed = 293;
+running = true;
