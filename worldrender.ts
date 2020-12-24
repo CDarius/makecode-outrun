@@ -1,3 +1,15 @@
+// --- World render configuration
+const STRIPE_HEIGHT = 10;
+const STRIPE_WIDTH = Math.round(scene.screenWidth() * 1.4);
+const STRIPTES_VIEW_PORT = 12;
+const PERSPECTIVE_VERTICAL_CENTER = Math.round(scene.screenHeight() / 3);
+const Z_PERSPECTIVE_FACTOR = 20;
+const CIRCUIT_STRIPE_RECORD_LEN = 7;
+const STRIPE_HALF_HEIGHT = Math.idiv(STRIPE_HEIGHT, 2);
+const STRIPE_HALF_WIDTH_FP = Math.round(STRIPE_WIDTH / 2 * POS_FIXED_MATH_ONE);
+const MIN_ANGLE = -89 * ANGLES_FIXED_MATH_ONE;
+const MAX_ANGLE = 89 * ANGLES_FIXED_MATH_ONE;
+
 enum ObstacleDirection {
   Top,
   Left,
