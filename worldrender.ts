@@ -71,12 +71,16 @@ class WorldRender {
     }
 
     public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
+        const maxTravelDistance = Math.imul(Math.idiv(CIRCUIT.length, CIRCUIT_STRIPE_RECORD_LEN) - STRIPES_VIEW_PORT, STRIPE_HEIGHT);
         const firstStripe = Math.idiv(travelDistance, STRIPE_HEIGHT);
         const firstStripeOffeset = travelDistance % STRIPE_HEIGHT;
         const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
 
-        if (firstStripeIndex + STRIPES_VIEW_PORT * CIRCUIT_STRIPE_RECORD_LEN >= CIRCUIT.length)
-            return false;
+        let circuitEndReached = false;
+        if (travelDistance > maxTravelDistance) {
+            travelDistance = maxTravelDistance;
+            circuitEndReached = true;
+        }
 
         this.perspectiveHorizontalCenter = perspectiveHorizontalCenter;
 
@@ -123,7 +127,7 @@ class WorldRender {
                 this.drawScaledV(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
         }
 
-        return true;
+        return circuitEndReached;
     }
 
     private drawStripe(circuitIndex: number, stripeNum: number, img: Image, startSTRIPE_HEIGHT: number): void {

@@ -99,6 +99,8 @@ carSprite.setPosition(SCREEN_HALF_WIDTH, 105);
 carSprite.z = LAYER_PLAYER;
 
 let running = false;
+let isOver = false;
+let endReached = false;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
@@ -120,13 +122,12 @@ game.onUpdate(function() {
         carSprite.setImage(CAR_IMG_RIGHT);
     else
         carSprite.setImage(CAR_IMG_STRAIGHT);
-
-    // Time over game end
-    if (countdown.isExpired())    
-        game.over();
 });
 
 game.onPaint(function() {
+    if (isOver || endReached)
+        return;
+
     if (running) {
         carPhysics.updateSpeed(
             controller.A.isPressed(), 
@@ -166,9 +167,14 @@ game.onPaint(function() {
 
     // Draw the world
     const backgroundImg = scene.backgroundImage();
-    worldRender.draw(backgroundImg, carPhysics.traveledDistance() , perspectiveHorizontalCenter);
+    endReached = worldRender.draw(backgroundImg, carPhysics.traveledDistance() , perspectiveHorizontalCenter);
+
+    if (endReached) {
+        carPhysics.setSpeed(0);
+    }
 
     // Draw HUD
+    let pippo = carPhysics.speed().toString();
     speedTextValue.setText(carPhysics.speed().toString());
     countDownValue.setText(countdown.remainingTime().toString());
     scoreTextValue.setText(info.score().toString());
@@ -188,3 +194,18 @@ game.onUpdateInterval(200, function() {
 pause(2000);
 countdown.start();
 running = true;
+
+while(!isOver) {
+    // Time over game end
+    if (countdown.isExpired()) {    
+        isOver = true;
+        game.over();            
+    }
+
+    // Circuit end reached. Game won
+    if (endReached) {        
+        isOver = true;
+        game.over(true, effects.confetti);
+    }
+    pause(200);
+}
