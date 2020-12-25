@@ -1,14 +1,17 @@
 // --- World render configuration
-const STRIPE_HEIGHT = 10;
-const STRIPE_WIDTH = Math.round(scene.screenWidth() * 1.4);
-const STRIPTES_VIEW_PORT = 12;
 const PERSPECTIVE_VERTICAL_CENTER = Math.round(scene.screenHeight() / 3);
 const Z_PERSPECTIVE_FACTOR = 20;
-const CIRCUIT_STRIPE_RECORD_LEN = 7;
+const ROAD_INIT_Y = Math.round((SCREEN_HEIGHT - PERSPECTIVE_VERTICAL_CENTER) * POS_FIXED_MATH_ONE);
+
+const STRIPE_HEIGHT = 10;
+const STRIPE_WIDTH = Math.round(scene.screenWidth() * 1.4);
+const STRIPES_VIEW_PORT = 12;
 const STRIPE_HALF_HEIGHT = Math.idiv(STRIPE_HEIGHT, 2);
 const STRIPE_HALF_WIDTH_FP = Math.round(STRIPE_WIDTH / 2 * POS_FIXED_MATH_ONE);
-const MIN_ANGLE = -89 * ANGLES_FIXED_MATH_ONE;
-const MAX_ANGLE = 89 * ANGLES_FIXED_MATH_ONE;
+
+const ROAD_MIN_ANGLE = -89 * ANGLES_FIXED_MATH_ONE;
+const ROAD_MAX_ANGLE = 89 * ANGLES_FIXED_MATH_ONE;
+const CIRCUIT_STRIPE_RECORD_LEN = 7;
 
 enum ObstacleDirection {
   Top,
@@ -44,28 +47,51 @@ class WorldRender {
         this.backdropOffset = 0;
     }
 
+    public calcRoadCurveInSegment(startPoint: number, lenght: number): number {
+        const firstStripe = Math.idiv(startPoint, STRIPE_HEIGHT);
+        const firstStripeOffeset = startPoint % STRIPE_HEIGHT;
+        const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
+        const endPoint = startPoint + lenght;
+
+        let point = startPoint;
+        let index = firstStripeIndex;
+        let curveSum = 0;
+        while (point < endPoint) {
+            const curveAngle = CIRCUIT[index] as number;
+            const offset = point == startPoint ? firstStripeOffeset : 0;
+            let deltaDist = STRIPE_HEIGHT - offset;
+            if ((point + deltaDist) > endPoint)
+                deltaDist = endPoint - point;
+            curveSum += Math.imul(deltaDist, curveAngle);
+            point += deltaDist;
+            index += CIRCUIT_STRIPE_RECORD_LEN;
+        }
+
+        return curveSum;
+    }
+
     public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
         const firstStripe = Math.idiv(travelDistance, STRIPE_HEIGHT);
         const firstStripeOffeset = travelDistance % STRIPE_HEIGHT;
         const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
 
-        if (firstStripeIndex + STRIPTES_VIEW_PORT * CIRCUIT_STRIPE_RECORD_LEN >= CIRCUIT.length)
+        if (firstStripeIndex + STRIPES_VIEW_PORT * CIRCUIT_STRIPE_RECORD_LEN >= CIRCUIT.length)
             return false;
 
         this.perspectiveHorizontalCenter = perspectiveHorizontalCenter;
-        
+
         // Draw the steet
         this.drawZ = 0;
         this.drawY = SCREEN_HEIGHT;
         this.roadAngleX = 0;
         this.roadAngleY = 0;
         this.roadCenter = 0;
-        this.roadY = Math.round((SCREEN_HEIGHT - PERSPECTIVE_VERTICAL_CENTER) * POS_FIXED_MATH_ONE);
+        this.roadY = ROAD_INIT_Y;
         this.stripeToggle = firstStripe % 2 == 0;
         this.obstaclesToRenders = [];
 
-        for (let i = 0; i < STRIPTES_VIEW_PORT; i++) {
-            const circuitIndex = firstStripeIndex + i * CIRCUIT_STRIPE_RECORD_LEN;
+        for (let i = 0; i < STRIPES_VIEW_PORT; i++) {
+            const circuitIndex = firstStripeIndex + Math.imul(i, CIRCUIT_STRIPE_RECORD_LEN);
             const offset = i == 0 ? firstStripeOffeset : 0;
             this.drawStripe(circuitIndex, i, targetImg , offset);
             this.stripeToggle = !this.stripeToggle;
@@ -87,7 +113,7 @@ class WorldRender {
             targetImg.drawTransparentImage(BACKDROP_IMG, backdropOffset - BACKDROP_IMG.width, this.drawY - BACKDROP_IMG.height);
         this.backdropOffset = backdropOffset;
 
-        // Display ostacles sprite        
+        // Draw ostacles
         const lastObstacleToRender = this.obstaclesToRenders.length - 1;
         for (let i = lastObstacleToRender; i >= 0; i--) {
             const obstacle = this.obstaclesToRenders[i];
@@ -118,22 +144,22 @@ class WorldRender {
             this.roadAngleY += slopeAngleDelta; 
 
             if (this.roadAngleX >= 0) {
-                if (this.roadAngleX > MAX_ANGLE)
-                    this.roadAngleX = MAX_ANGLE;
+                if (this.roadAngleX > ROAD_MAX_ANGLE)
+                    this.roadAngleX = ROAD_MAX_ANGLE;
                 this.roadCenter += this.sinTable[this.roadAngleX >> ANGLES_BITS];
             } else {
-                if (this.roadAngleX < MIN_ANGLE)
-                    this.roadAngleX = MIN_ANGLE;
+                if (this.roadAngleX < ROAD_MIN_ANGLE)
+                    this.roadAngleX = ROAD_MIN_ANGLE;
                 this.roadCenter -= this.sinTable[-(this.roadAngleX >> ANGLES_BITS)];
             }
 
             if (this.roadAngleY >= 0) {
-                if (this.roadAngleY > MAX_ANGLE)
-                    this.roadAngleY = MAX_ANGLE;
+                if (this.roadAngleY > ROAD_MAX_ANGLE)
+                    this.roadAngleY = ROAD_MAX_ANGLE;
                 this.roadY += this.sinTable[this.roadAngleY >> ANGLES_BITS];  
             } else {
-                if (this.roadAngleY < MIN_ANGLE)
-                    this.roadAngleY = MIN_ANGLE;
+                if (this.roadAngleY < ROAD_MIN_ANGLE)
+                    this.roadAngleY = ROAD_MIN_ANGLE;
                 this.roadY -= this.sinTable[-(this.roadAngleY >> ANGLES_BITS)];  
             }
 

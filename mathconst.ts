@@ -12,9 +12,6 @@ const SCREEN_HALF_HEIGHT = Math.idiv(SCREEN_HEIGHT, 2);
 
 // --- Car configuration
 const CAR_VIEWPORT = Math.idiv(scene.screenWidth(), 7);
-const CAR_X_MOVE_RANGE = Math.round(STRIPE_WIDTH * 1.4);
-const CAR_X_MOVE_RANGE_P = Math.idiv(CAR_X_MOVE_RANGE, 2);
-const CAR_X_MOVE_RANGE_M = -CAR_X_MOVE_RANGE_P;
 // end car configuration
 
 const SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT = SCREEN_HALF_WIDTH + CAR_VIEWPORT;

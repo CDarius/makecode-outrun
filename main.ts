@@ -67,6 +67,8 @@ const CAR_IMG_RIGHT = img`
     .ffffffff.....................ffffffff......
     ..ffffff.......................ffffff.......
 `
+// --- End car sprite images 
+
 const BACKDROP_IMG = img`
     ................................................................................................................................................................
     .........................................................................6666b..................................................................................
@@ -93,12 +95,10 @@ const countdown = new Countdown();
 countdown.load(60);
 
 const carSprite = sprites.create(CAR_IMG_STRAIGHT);
-carSprite.setPosition(80, 105);
+carSprite.setPosition(SCREEN_HALF_WIDTH, 105);
 carSprite.z = LAYER_PLAYER;
 
 let running = false;
-let carXPos = 0;
-let perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
@@ -127,16 +127,25 @@ game.onUpdate(function() {
 });
 
 game.onPaint(function() {
-    if (running)
-        carPhysics.update(controller.A.isPressed(), controller.B.isPressed());
-    else
+    if (running) {
+        carPhysics.updateSpeed(
+            controller.A.isPressed(), 
+            controller.B.isPressed(),
+            controller.left.isPressed(),
+            controller.right.isPressed());
+
+        const deltaDistance = carPhysics.deltaTraveledDistance();
+        const oldDistance = carPhysics.traveledDistance() - deltaDistance;
+        const roadCurveDelta = worldRender.calcRoadCurveInSegment(oldDistance, deltaDistance);
+        carPhysics.applyRoadDeltaCurve(roadCurveDelta);
+    } else
         carPhysics.clear();        
 
-    // Update car horizontal position
-    const carStreeringWheel = controller.dx(40);
-    carXPos = Math.constrain(carXPos + carStreeringWheel, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
+    const carXPos = carPhysics.carXPos();
+    carSprite.x = carXPos;
 
     // Place player car and set camera center
+    let perspectiveHorizontalCenter: number;
     if (carXPos >= 0) {
         if (carXPos > CAR_VIEWPORT) {
             carSprite.x = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
