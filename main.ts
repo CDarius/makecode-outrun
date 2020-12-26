@@ -50,12 +50,15 @@ const scoreTextValue = new TextRender(info.score().toString(), 1, 3, doubledFont
 
 
 game.onUpdate(function() {
-    // Car turn animation
-    if (controller.left.isPressed())
-        carSprite.setImage(CAR_IMG_LEFT);
-    else if (controller.right.isPressed())
-        carSprite.setImage(CAR_IMG_RIGHT);
-    else
+    if (carPhysics.speed() > 1) {
+        // Car turn animation    
+        if (controller.left.isPressed())
+            carSprite.setImage(CAR_IMG_LEFT);
+        else if (controller.right.isPressed())
+            carSprite.setImage(CAR_IMG_RIGHT);
+        else
+            carSprite.setImage(CAR_IMG_STRAIGHT);
+    } else
         carSprite.setImage(CAR_IMG_STRAIGHT);
 });
 
@@ -109,7 +112,6 @@ game.onPaint(function() {
     }
 
     // Draw HUD
-    let pippo = carPhysics.speed().toString();
     speedTextValue.setText(carPhysics.speed().toString());
     countDownValue.setText(countdown.remainingTime().toString());
     scoreTextValue.setText(info.score().toString());

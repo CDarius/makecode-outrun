@@ -106,12 +106,14 @@ class CarPhysics {
         this._traveledDistanceFP += Math.idiv(Math.imul(this._speedFP, delta), CAR_SPEED_TRAVEL_FACTOR);
         this._deltaTraveledDistanceFP = this._traveledDistanceFP - oldTraveledDistanceFP;
 
-        // Update car X position
+        // Update car X position when the car is running
         let deltaX = 0;
-        if (turnLeft && !turnRight)
-            deltaX = -CAR_TURN_WEIGHT;
-        else if (!turnLeft && turnRight)
-            deltaX = CAR_TURN_WEIGHT;
+        if (this._speedFP > POS_FIXED_MATH_ONE) {
+            if (turnLeft && !turnRight)
+                deltaX = -CAR_TURN_WEIGHT;
+            else if (!turnLeft && turnRight)
+                deltaX = CAR_TURN_WEIGHT;
+        }
 
         deltaX = Math.idiv(Math.imul(deltaX, delta), 1000);
         this._carXPosFP = Math.constrain(this._carXPosFP + deltaX, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
