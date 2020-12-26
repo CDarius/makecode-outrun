@@ -27,10 +27,11 @@ countdown.load(60);
 let running = false;
 let isOver = false;
 let endReached = false;
+let crashed = false;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
-const explosionAnimation = new ExplosionAnimation(40, 10, CAR_EXPLOSION_FRAMES);
+const explosionAnimation = new ExplosionAnimation(40, 10, 2000, CAR_EXPLOSION_FRAMES);
 
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
@@ -45,16 +46,29 @@ game.onPaint(function() {
         return;
 
     if (running) {
-        carPhysics.updateSpeed(
-            controller.A.isPressed(), 
-            controller.B.isPressed(),
-            controller.left.isPressed(),
-            controller.right.isPressed());
+        if (crashed) {
+            if (!explosionAnimation.isDone())
+                // Quickly stop the car after a crash
+                carPhysics.hardStop();
+            else {
+                // Move the car back on road center
+                // when the explosion animation is done
+                carPhysics.moveToXPos(0, 50);
+                if (carPhysics.carXPos() == 0)
+                    crashed = false;
+            }
+        } else {
+            carPhysics.updateSpeed(
+                controller.A.isPressed(), 
+                controller.B.isPressed(),
+                controller.left.isPressed(),
+                controller.right.isPressed());
 
-        const deltaDistance = carPhysics.deltaTraveledDistance();
-        const oldDistance = carPhysics.traveledDistance() - deltaDistance;
-        const roadCurveDelta = worldRender.calcRoadCurveInSegment(oldDistance, deltaDistance);
-        carPhysics.applyRoadDeltaCurve(roadCurveDelta);
+            const deltaDistance = carPhysics.deltaTraveledDistance();
+            const oldDistance = carPhysics.traveledDistance() - deltaDistance;
+            const roadCurveDelta = worldRender.calcRoadCurveInSegment(oldDistance, deltaDistance);
+            carPhysics.applyRoadDeltaCurve(roadCurveDelta);
+        }
     } else
         carPhysics.clear();        
 
@@ -104,6 +118,11 @@ game.onPaint(function() {
     const carDrawY = CAR_Y_POS - (carFrame.height >> 1);
     backgroundImg.drawTransparentImage(carFrame, carDrawX, carDrawY);
 
+    // Draw car explosion animation
+    if (!explosionAnimation.isDone()) {
+        explosionAnimation.draw(backgroundImg, carXPos, CAR_Y_POS);
+    }
+
     // Draw HUD
     speedTextValue.setText(carPhysics.speed().toString());
     countDownValue.setText(countdown.remainingTime().toString());
@@ -116,16 +135,37 @@ game.onPaint(function() {
     scoreTextValue.draw(backgroundImg, SCREEN_WIDTH - 1, scoreTextLabel.height() + 2, TextAlignment.Right);
 });
 
+game.onUpdateInterval(30, function() {
+    if (crashed && explosionAnimation.isDone()) {
+        const carXPos = carPhysics.carXPos();
+        if (carXPos > 1) {
+            carPhysics.setCarXPos(carXPos - 2);
+        } else if (carXPos < -1) {
+            carPhysics.setCarXPos(carXPos + 2);
+        } else {
+        }
+    }
+});
+
 game.onUpdateInterval(200, function() {
     info.changeScoreBy(Math.idiv(carPhysics.speed(), 20));
     info.showScore(false);
 });
+
+function startCarCrash(): void {
+    crashed = true;
+    explosionAnimation.begin();
+}
 
 pause(2000);
 countdown.start();
 running = true;
 
 while(!isOver) {
+    if (carPhysics.carXPos() < -70 && !crashed) {
+        startCarCrash();
+    }
+
     // Time over game end
     if (countdown.isExpired()) {    
         isOver = true;

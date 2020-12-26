@@ -1,6 +1,7 @@
 class ExplosionAnimation {
-    public durationMs: number;
+    public singleExplosionDurationMs: number;
     public numFires: number;
+    public minStartDelay: number;
     public maxStartDelay: number;
 
     private running: boolean;
@@ -11,11 +12,10 @@ class ExplosionAnimation {
     private fireXOffset: number[];
     private fireYOffset: number[];
 
-    private frames: Image[];
-
-    constructor(public offsetWidth: number, public offsetHeight: number, frames: Image[]) {
-        this.durationMs = 400;
+    constructor(public offsetWidth: number, public offsetHeight: number, public durationMs: number, public frames: Image[]) {
+        this.singleExplosionDurationMs = 400;
         this.numFires = 4;
+        this.minStartDelay = 100;
         this.maxStartDelay = 500;
         this.running = false;
         this.frames = frames;
@@ -25,17 +25,13 @@ class ExplosionAnimation {
         return !this.running;
     }
 
-    public initExplosion(): void {
+    public begin(): void {
         this.fireStartTime = [];
         // First fire always start immediately
         this.fireStartTime.push(0);
         // The other fires have little delays
-        let maxDelay = 0;
         for (let i = 1; i < this.numFires; i++) {
-            const delay = randint(100, this.maxStartDelay);
-            this.fireStartTime.push(delay);
-            if (delay > maxDelay)
-                maxDelay = delay;
+            this.fireStartTime.push(randint(this.minStartDelay, this.maxStartDelay));
         }
         
         const xOffsetPlus = this.offsetWidth >> 1;
@@ -50,9 +46,9 @@ class ExplosionAnimation {
             this.fireYOffset.push(randint(yOffsetMinus, yOffsetPlus));
         }
 
-        this.frameInterval = Math.idiv(this.durationMs, this.frames.length);
+        this.frameInterval = Math.idiv(this.singleExplosionDurationMs, this.frames.length);
         this.animationStartTime = game.runtime();
-        this.animationEndTime = this.animationStartTime + maxDelay + this.durationMs;
+        this.animationEndTime = this.animationStartTime + this.durationMs;
         this.running = true;
     }
 
@@ -77,6 +73,15 @@ class ExplosionAnimation {
                     const drawX = x - (frameImg.width >> 1) + this.fireXOffset[i];
                     const drawY = y - (frameImg.height >> 1) + this.fireYOffset[i];
                     targetImg.drawTransparentImage(frameImg, drawX, drawY);
+                } else {
+                    const xOffsetPlus = this.offsetWidth >> 1;
+                    const xOffsetMinus = -xOffsetPlus;
+                    const yOffsetPlus = this.offsetHeight >> 1;
+                    const yOffsetMinus = -yOffsetPlus;
+
+                    this.fireStartTime[i] = deltaSinceStart + randint(this.minStartDelay, this.maxStartDelay);
+                    this.fireXOffset[i] = randint(xOffsetMinus, xOffsetPlus);
+                    this.fireYOffset[i] = randint(yOffsetMinus, yOffsetPlus);
                 }
             }
         }

@@ -12,7 +12,6 @@ class CarAccelerationPoint {
     }
 }
 
-
 const CAR_ACCELERATION_CURVE: CarAccelerationPoint[] = [
     new CarAccelerationPoint(0 * POS_FIXED_MATH_ONE, 35 * POS_FIXED_MATH_ONE),
     new CarAccelerationPoint(50 * POS_FIXED_MATH_ONE, 32 * POS_FIXED_MATH_ONE),
@@ -37,6 +36,7 @@ const CAR_BRAKING_CURVE: CarAccelerationPoint[] = [
 ];
 
 const CAR_COASTING_ACCELERATION = -12 * POS_FIXED_MATH_ONE;
+const CAR_HARD_STOP_ACCELERATION = -CAR_MAX_SPEED * 2 * POS_FIXED_MATH_ONE;
 
 class CarPhysics {
     private _speedFP: number;
@@ -65,13 +65,17 @@ class CarPhysics {
         return Math.idiv(this._deltaTraveledDistanceFP, POS_FIXED_MATH_ONE)
     }
 
+    public setCarXPos(value: number): void {
+        this._carXPosFP = Math.imul(value, POS_FIXED_MATH_ONE);
+    }
+
     public carXPos(): number {
         return Math.idiv(this._carXPosFP, POS_FIXED_MATH_ONE);
     }
 
     public updateSpeed(accelerate: boolean, brake: boolean, turnLeft: boolean, turnRight: boolean): void {
         const now = game.runtime();
-        const delta = now - this._lastRun;
+        const deltaT = now - this._lastRun;
         this._lastRun = now;
 
         // Update the speed
@@ -79,7 +83,7 @@ class CarPhysics {
             for (let i = CAR_BRAKING_CURVE.length - 1; i >= 0; i--) {
                 const point = CAR_BRAKING_CURVE[i];
                 if (this._speedFP >= point.speed) {
-                    this._speedFP += Math.idiv(Math.imul(point.acceleration, delta), 1000);
+                    this._speedFP += Math.idiv(Math.imul(point.acceleration, deltaT), 1000);
                     break;
                 }
             }        
@@ -87,12 +91,12 @@ class CarPhysics {
             for (let i = CAR_ACCELERATION_CURVE.length - 1; i >= 0; i--) {
                 const point = CAR_ACCELERATION_CURVE[i];
                 if (this._speedFP >= point.speed) {
-                    this._speedFP += Math.idiv(Math.imul(point.acceleration, delta), 1000);
+                    this._speedFP += Math.idiv(Math.imul(point.acceleration, deltaT), 1000);
                     break;
                 }
             }        
         } else {
-            this._speedFP += Math.idiv(Math.imul(CAR_COASTING_ACCELERATION, delta), 1000);
+            this._speedFP += Math.idiv(Math.imul(CAR_COASTING_ACCELERATION, deltaT), 1000);
         }
 
         if (this._speedFP > CAR_MAX_SPEED) {
@@ -101,10 +105,7 @@ class CarPhysics {
             this._speedFP = 0;
         }
 
-        // Update traveled distance and delta traveled distance
-        const oldTraveledDistanceFP = this._traveledDistanceFP;
-        this._traveledDistanceFP += Math.idiv(Math.imul(this._speedFP, delta), CAR_SPEED_TRAVEL_FACTOR);
-        this._deltaTraveledDistanceFP = this._traveledDistanceFP - oldTraveledDistanceFP;
+        this.updateTravelDistance(deltaT);
 
         // Update car X position when the car is running
         let deltaX = 0;
@@ -115,7 +116,7 @@ class CarPhysics {
                 deltaX = CAR_TURN_WEIGHT;
         }
 
-        deltaX = Math.idiv(Math.imul(deltaX, delta), 1000);
+        deltaX = Math.idiv(Math.imul(deltaX, deltaT), 1000);
         this._carXPosFP = Math.constrain(this._carXPosFP + deltaX, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
     }
 
@@ -124,11 +125,47 @@ class CarPhysics {
         this._carXPosFP = Math.constrain(this._carXPosFP - curveDisplacement, CAR_X_MOVE_RANGE_M, CAR_X_MOVE_RANGE_P);
     }
     
+    public hardStop(): void {
+        const now = game.runtime();
+        const deltaT = now - this._lastRun;
+        this._lastRun = now;
+
+        this._speedFP += Math.idiv(Math.imul(CAR_HARD_STOP_ACCELERATION, deltaT), 1000);        
+        if (this._speedFP < 0)
+                this._speedFP = 0;
+
+        this.updateTravelDistance(deltaT);
+    }
+
+    public moveToXPos(xPos: number, speed: number) {
+        const now = game.runtime();
+        const deltaT = now - this._lastRun;
+        this._lastRun = now;
+
+        const xPosFP = Math.imul(xPos, POS_FIXED_MATH_ONE);
+        const distanceToXPos = xPosFP - this._carXPosFP;
+
+        let deltaXFP = Math.idiv(Math.imul(Math.imul(xPos, POS_FIXED_MATH_ONE), deltaT), 1000);
+        if (deltaXFP > Math.abs(distanceToXPos))
+            deltaXFP = distanceToXPos;
+        else if (distanceToXPos < 0)
+            deltaXFP = -deltaXFP;
+
+        this._carXPosFP += deltaXFP;
+    }
+
     public clear(): void {
         this._lastRun = game.runtime();
         this._speedFP = 0;
         this._traveledDistanceFP = 0;
         this._deltaTraveledDistanceFP = 0;
         this._carXPosFP = 0;
+    }
+
+    private updateTravelDistance(deltaTime: number): void {
+        // Update traveled distance and delta traveled distance
+        const oldTraveledDistanceFP = this._traveledDistanceFP;
+        this._traveledDistanceFP += Math.idiv(Math.imul(this._speedFP, deltaTime), CAR_SPEED_TRAVEL_FACTOR);
+        this._deltaTraveledDistanceFP = this._traveledDistanceFP - oldTraveledDistanceFP;
     }
 }
