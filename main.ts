@@ -1,8 +1,4 @@
-// --- Sprite layers
-const LAYER_PLAYER = 10;
-const LAYER_OPPONENTS = 1;
-// --- End sprite layers
-
+const CAR_Y_POS = SCREEN_HEIGHT - (CAR_IMG_STRAIGHT.height >> 1) - 6;
 const BACKDROP_IMG = img`
     ................................................................................................................................................................
     .........................................................................6666b..................................................................................
@@ -28,10 +24,6 @@ info.showScore(false);
 const countdown = new Countdown();
 countdown.load(60);
 
-const carSprite = sprites.create(CAR_IMG_STRAIGHT);
-carSprite.setPosition(SCREEN_HALF_WIDTH, 105);
-carSprite.z = LAYER_PLAYER;
-
 let running = false;
 let isOver = false;
 let endReached = false;
@@ -47,20 +39,6 @@ const countDownLabel = new TextRender("TIME", 1, 3);
 const countDownValue = new TextRender(countdown.remainingTime().toString(), 1, 3, doubledFont);
 const scoreTextLabel = new TextRender("SCORE", 1, 3);
 const scoreTextValue = new TextRender(info.score().toString(), 1, 3, doubledFont);
-
-
-game.onUpdate(function() {
-    if (carPhysics.speed() > 1) {
-        // Car turn animation    
-        if (controller.left.isPressed())
-            carSprite.setImage(CAR_IMG_LEFT);
-        else if (controller.right.isPressed())
-            carSprite.setImage(CAR_IMG_RIGHT);
-        else
-            carSprite.setImage(CAR_IMG_STRAIGHT);
-    } else
-        carSprite.setImage(CAR_IMG_STRAIGHT);
-});
 
 game.onPaint(function() {
     if (isOver || endReached)
@@ -80,26 +58,24 @@ game.onPaint(function() {
     } else
         carPhysics.clear();        
 
-    const carXPos = carPhysics.carXPos();
-    carSprite.x = carXPos;
-
-    // Place player car and set camera center
+    // Get player car horizontal position and set camera center
+    let carXPos = carPhysics.carXPos();
     let perspectiveHorizontalCenter: number;
     if (carXPos >= 0) {
         if (carXPos > CAR_VIEWPORT) {
-            carSprite.x = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT - carXPos;
+            carXPos = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
         } else {
-            carSprite.x = SCREEN_HALF_WIDTH + carXPos;
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
+            carXPos = SCREEN_HALF_WIDTH + carXPos;
         }
     } else {
         if (carXPos < (-CAR_VIEWPORT)) {
-            carSprite.x = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT - carXPos;
+            carXPos = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
         } else {
-            carSprite.x =  SCREEN_HALF_WIDTH + carXPos;
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
+            carXPos =  SCREEN_HALF_WIDTH + carXPos;
         }
     }
 
@@ -110,6 +86,23 @@ game.onPaint(function() {
     if (endReached) {
         carPhysics.setSpeed(0);
     }
+
+    // Draw the car
+    let carFrame: Image;
+    if (carPhysics.speed() > 1) {
+        // Car turn animation    
+        if (controller.left.isPressed())
+            carFrame = CAR_IMG_LEFT;
+        else if (controller.right.isPressed())
+            carFrame = CAR_IMG_RIGHT;
+        else
+            carFrame = CAR_IMG_STRAIGHT;
+    } else {
+        carFrame = CAR_IMG_STRAIGHT;
+    }
+    const carDrawX = carXPos - (carFrame.width >> 1);
+    const carDrawY = CAR_Y_POS - (carFrame.height >> 1);
+    backgroundImg.drawTransparentImage(carFrame, carDrawX, carDrawY);
 
     // Draw HUD
     speedTextValue.setText(carPhysics.speed().toString());
