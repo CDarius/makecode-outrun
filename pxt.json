@@ -13,7 +13,9 @@
         "textrender.ts",
         "countdown.ts",
         "worldrender.ts",
-        "carphysics.ts"
+        "carphysics.ts",
+        "playerCarAssets.ts",
+        "explosionanimation.ts"
     ],
     "testFiles": [
         "test.ts"

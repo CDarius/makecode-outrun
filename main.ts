@@ -3,72 +3,6 @@ const LAYER_PLAYER = 10;
 const LAYER_OPPONENTS = 1;
 // --- End sprite layers
 
-// --- Car sprite images 
-const CAR_IMG_STRAIGHT = img`
-    ..........2222222222222222222..........
-    ........22999999999999999999922........
-    ...2dd.2999eeee99999995554599992.dd2...
-    ...2ee22999eeee999999455555499922ee2...
-    .....222ff444444fffff44444544ff222.....
-    ..22222eeeeeeeeeeeeeeeeeeeeeeeee22222..
-    222222effffffffff1ffffffffffffffe222222
-    2fffffffffffffff111fffffffffffffffffff2
-    2f4441dfbbbbbbbbbb11b1bbbbbbbbbfd1444f2
-    2f22222ffffffffff1f11fffffffffff22222f2
-    2fffffffbbbbbbbbbbbb1bbbbbbbbbbfffffff2
-    222222222222244444444444442222222222222
-    422222222222245555555555542222222222224
-    442222222222244444444444442222222222444
-    f4444444411222222222222222221144444444f
-    feeeffffdff1eeeeeeeeeeeeeeedff1ffffeeef
-    fffffffffddfffffffffffffffffddfffffffff
-    ffffffff.......................ffffffff
-    .ffffff.........................ffffff.
-`
-const CAR_IMG_LEFT = img`
-    .............22222222222222.................
-    ...........229999999999999922...............
-    ......2dd.2999eee9999555459992.dd...........
-    ......2ee22999eee99945555549922ee22.........
-    ....2222222ff44444ff44444544f222222222......
-    ..422e2222222eeeeeeeeeeeeeeeeeee222222222...
-    .242ef222222effffffffff1ffffffffe2222222222.
-    .22e4e2fffffffffffffff111ffffffffffffffff22.
-    .2e4ef2f4441dfbbbbbbbbbb11bbbbbbbbfd1444f22.
-    .22e422f22222ffffffffff1fffffffffff22222f22.
-    .fe4222fffffffbbbbbbbbbbbbbbbbbbbbfffffff22.
-    .ff2222222222222222444444444444222222222222.
-    .fff224222222222222455555555554222222222224.
-    ..ff2f4422222222222444444444444222222222444.
-    ...f2ff44444444412222222222222222144444444f.
-    ....2ffeeeffffedf1eeeeeeeeeeeeee1f1ffffeeef.
-    .....fffffffffffdffffffffffffffffdfffffffff.
-    ......ffffffff.....................ffffffff.
-    .......ffffff.......................ffffff..
-`
-const CAR_IMG_RIGHT = img`
-    .................22222222222222.............
-    ...............229999999999999922...........
-    ...........dd.29999eeee99955459992.dd2......
-    .........22ee229999eeee994555549922ee2......
-    ......222222222fff444444f444454ff2222222....
-    ...222222222eeeeeeeeeeeeeeeeeee2222222e224..
-    .2222222222efffffff1fffffffffffe222222fe242.
-    .22fffffffffffffff111ffffffffffffffff2e4e22.
-    .22f4441dfbbbbbbbbbb11bbbbbbbbfd1444f2fe4e2.
-    .22f22222ffffffffff1fffffffffff22222f224e22.
-    .22fffffffbbbbbbbbbbbbbbbbbbbbfffffff2224ef.
-    .2222222222224444444444442222222222222222ff.
-    .422222222222455555555554222222222222422fff.
-    .4442222222224444444444442222222222244f2ff..
-    .f44444444122222222222222221444444444ff2f...
-    .feeeffff1f1eeeeeeeeeeeeee1fdeffffeeeff2....
-    .fffffffffdffffffffffffffffdfffffffffff.....
-    .ffffffff.....................ffffffff......
-    ..ffffff.......................ffffff.......
-`
-// --- End car sprite images 
-
 const BACKDROP_IMG = img`
     ................................................................................................................................................................
     .........................................................................6666b..................................................................................
@@ -104,6 +38,7 @@ let endReached = false;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
+const explosionAnimation = new ExplosionAnimation(40, 10, CAR_EXPLOSION_FRAMES);
 
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
