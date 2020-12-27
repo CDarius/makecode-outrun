@@ -11,7 +11,6 @@ const STRIPE_HALF_WIDTH_FP = Math.round(STRIPE_WIDTH / 2 * POS_FIXED_MATH_ONE);
 
 const ROAD_MIN_ANGLE = -89 * ANGLES_FIXED_MATH_ONE;
 const ROAD_MAX_ANGLE = 89 * ANGLES_FIXED_MATH_ONE;
-const CIRCUIT_STRIPE_RECORD_LEN = 7;
 
 enum ObstacleDirection {
   Top,
@@ -51,23 +50,22 @@ class WorldRender {
     }
 
     public calcRoadCurveInSegment(startPoint: number, lenght: number): number {
-        const firstStripe = Math.idiv(startPoint, STRIPE_HEIGHT);
+        const firstStripeIndex = Math.idiv(startPoint, STRIPE_HEIGHT);
         const firstStripeOffeset = startPoint % STRIPE_HEIGHT;
-        const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
         const endPoint = startPoint + lenght;
 
         let point = startPoint;
         let index = firstStripeIndex;
         let curveSum = 0;
         while (point < endPoint) {
-            const curveAngle = CIRCUIT[index] as number;
+            const curveAngle = CIRCUIT[index].direction;
             const offset = point == startPoint ? firstStripeOffeset : 0;
             let deltaDist = STRIPE_HEIGHT - offset;
             if ((point + deltaDist) > endPoint)
                 deltaDist = endPoint - point;
             curveSum += Math.imul(deltaDist, curveAngle);
             point += deltaDist;
-            index += CIRCUIT_STRIPE_RECORD_LEN;
+            index++;
         }
 
         return curveSum;
@@ -95,10 +93,9 @@ class WorldRender {
     }
 
     public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
-        const maxTravelDistance = Math.imul(Math.idiv(CIRCUIT.length, CIRCUIT_STRIPE_RECORD_LEN) - STRIPES_VIEW_PORT, STRIPE_HEIGHT);
-        const firstStripe = Math.idiv(travelDistance, STRIPE_HEIGHT);
+        const maxTravelDistance = Math.imul(CIRCUIT.length - STRIPES_VIEW_PORT, STRIPE_HEIGHT);
+        const firstStripeIndex = Math.idiv(travelDistance, STRIPE_HEIGHT);
         const firstStripeOffeset = travelDistance % STRIPE_HEIGHT;
-        const firstStripeIndex = firstStripe * CIRCUIT_STRIPE_RECORD_LEN;
 
         let circuitEndReached = false;
         if (travelDistance > maxTravelDistance) {
@@ -115,11 +112,11 @@ class WorldRender {
         this.roadAngleY = 0;
         this.roadCenter = 0;
         this.roadY = ROAD_INIT_Y;
-        this.stripeToggle = firstStripe % 2 == 0;
+        this.stripeToggle = firstStripeIndex % 2 == 0;
         this.obstaclesToRenders = [];
 
         for (let i = 0; i < STRIPES_VIEW_PORT; i++) {
-            const circuitIndex = firstStripeIndex + Math.imul(i, CIRCUIT_STRIPE_RECORD_LEN);
+            const circuitIndex = firstStripeIndex + i;
             const offset = i == 0 ? firstStripeOffeset : 0;
             this.drawStripe(circuitIndex, i, targetImg , offset);
             this.stripeToggle = !this.stripeToggle;
@@ -130,7 +127,7 @@ class WorldRender {
         targetImg.fillRect(0, 0, SCREEN_WIDTH, this.drawY , 9);
 
         // Draw backdrop image
-        let backdropOffset = this.backdropOffset - (((CIRCUIT[firstStripeIndex] as number) * 2) >> ANGLES_BITS);
+        let backdropOffset = this.backdropOffset - (((CIRCUIT[firstStripeIndex].direction) * 2) >> ANGLES_BITS);
         if (backdropOffset < 0)
             backdropOffset = SCREEN_WIDTH + backdropOffset;
         else if (backdropOffset > SCREEN_WIDTH)
@@ -155,21 +152,15 @@ class WorldRender {
     }
 
     private drawStripe(circuitIndex: number, stripeNum: number, img: Image, startSTRIPE_HEIGHT: number): void {
-        const directionAngleDelta = CIRCUIT[circuitIndex] as number;
-        const slopeAngleDelta = CIRCUIT[circuitIndex + 1] as number;
-        const leftObstacle = CIRCUIT[circuitIndex + 2] as Obstacle;
-        const rightObstacle = CIRCUIT[circuitIndex + 3] as Obstacle;
-        const topObstacle = CIRCUIT[circuitIndex + 4] as Obstacle;
-        const leftDirtColor = CIRCUIT[circuitIndex + 5] as number;
-        const rightDirtColor = CIRCUIT[circuitIndex + 6] as number;
+        const circuitSegment = CIRCUIT[circuitIndex];
 
         const roadColor = this.stripeToggle ? 12 : 11;
         const borderColor = this.stripeToggle ? 1 : 12;
         const laneColor = 1;
 
         for (let i = startSTRIPE_HEIGHT; i < STRIPE_HEIGHT; i++) {
-            this.roadAngleX += directionAngleDelta;
-            this.roadAngleY += slopeAngleDelta; 
+            this.roadAngleX += circuitSegment.direction;
+            this.roadAngleY += circuitSegment.slope; 
 
             if (this.roadAngleX >= 0) {
                 if (this.roadAngleX > ROAD_MAX_ANGLE)
@@ -211,7 +202,10 @@ class WorldRender {
             const x2_lane2 = x2_borderR - laneWidth;
             const x1_lane2 = x2_lane2 - laneLineWidth;
 
-            // Draw side obstacles
+            // Draw obstacles
+            const leftObstacle = circuitSegment.leftObstacle;
+            const rightObstacle = circuitSegment.rightObstacle;
+            const topObstacle = circuitSegment.centerObstacle;
             if (i == STRIPE_HALF_HEIGHT && roadLine2D[2] <= this.drawY) {
                 if (topObstacle != null) {
                     this.drawSideObstacles(this.roadCenter, y_3d, this.drawZ, topObstacle, ObstacleDirection.Top);
@@ -227,8 +221,8 @@ class WorldRender {
             // Draw steet
             while (roadLine2D[2] < this.drawY) {
                 this.drawY--;
-                img.drawLine(0, this.drawY, x1_borderL, this.drawY, leftDirtColor);
-                img.drawLine(x2_borderR, this.drawY, SCREEN_WIDTH, this.drawY, rightDirtColor);
+                img.drawLine(0, this.drawY, x1_borderL, this.drawY, circuitSegment.leftSideColor);
+                img.drawLine(x2_borderR, this.drawY, SCREEN_WIDTH, this.drawY, circuitSegment.rightSideColor);
                 img.drawLine(x1_borderL, this.drawY, x1_road, this.drawY, borderColor);
                 img.drawLine(x1_road, this.drawY, x2_road, this.drawY, roadColor);
                 img.drawLine(x2_road, this.drawY, x2_borderR, this.drawY, borderColor);

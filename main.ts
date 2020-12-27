@@ -18,7 +18,6 @@ const BACKDROP_IMG = img`
     6d66666666666666646666666d666b6666b666b66b6b66b666b66666b66b6b6b66b6666b6666b66b6b6b6b6b6b66b666b6666b66b666b6b6b6b6b6b6b666666b6666666666b6b6b66b666b666b666b66
 `
     
-game.stats = true;
 info.setScore(0);
 info.showScore(false);
 const countdown = new Countdown();
