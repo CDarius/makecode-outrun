@@ -21,8 +21,11 @@ enum ObstacleDirection {
 
 class RenderObstacle {
     public image: Image;
-    public x: number;
-    public y: number;
+    public x2d: number;
+    public y2d: number;
+    public x3dFP: number;
+    public y3dFP: number;
+    public z3dFP: number;
     public mirror: boolean;
     public scale: number;
 }
@@ -68,6 +71,27 @@ class WorldRender {
         }
 
         return curveSum;
+    }
+
+    public checkCollision(x1: number, y1: number, x2: number, y2: number, zLimit: number): boolean {
+        const lastObstacleToRender = this.obstaclesToRenders.length;
+        for (let i = 0; i < lastObstacleToRender; i++) {
+            const obstacle = this.obstaclesToRenders[i];
+
+            if (Math.idiv(obstacle.z3dFP, POS_FIXED_MATH_ONE) > zLimit)
+                return false;
+
+            const obstX1 = Math.idiv(obstacle.x3dFP, POS_FIXED_MATH_ONE);
+            const obstX2 = obstX1 + obstacle.image.width;
+            const obstY2 = Math.idiv(obstacle.y3dFP, POS_FIXED_MATH_ONE);
+            const obstY1 = obstY2 - obstacle.image.height;
+
+            const doNotOverlap = x2 < obstX1 || x1 > obstX2 || y2 < obstY1 || y1 > obstY2;
+            if (!doNotOverlap)
+                return true;
+        }
+
+        return false;
     }
 
     public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
@@ -122,9 +146,9 @@ class WorldRender {
         for (let i = lastObstacleToRender; i >= 0; i--) {
             const obstacle = this.obstaclesToRenders[i];
             if (obstacle.image.width >= obstacle.image.height)
-                this.drawScaledH(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
+                this.drawScaledH(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x2d, obstacle.y2d);
             else
-                this.drawScaledV(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x, obstacle.y);
+                this.drawScaledV(obstacle.image, targetImg, obstacle.scale, obstacle.mirror, obstacle.x2d, obstacle.y2d);
         }
 
         return circuitEndReached;
@@ -243,31 +267,41 @@ class WorldRender {
         obstacleToRender.image = obstacle.image;
         obstacleToRender.scale = denom;
         obstacleToRender.mirror = direction == ObstacleDirection.Right && obstacle.reqMirror;
+        obstacleToRender.z3dFP = z;
 
-        const imageWidthFixed = obstacleToRender.image.width * POS_FIXED_MATH_ONE;
-        const imageHeightFixed = obstacleToRender.image.height * POS_FIXED_MATH_ONE;
+        const imageWidthFixed = Math.imul(obstacleToRender.image.width, POS_FIXED_MATH_ONE);
+        const imageHeightFixed = Math.imul(obstacleToRender.image.height, POS_FIXED_MATH_ONE);
 
         if (direction == ObstacleDirection.Left) {
             x += obstacle.offset;
+            obstacleToRender.x3dFP = x;
+            obstacleToRender.y3dFP = y;
+
             const x_2D = Math.idiv(x - imageWidthFixed, denom) + this.perspectiveHorizontalCenter;
             const y_2D = Math.idiv(y - imageHeightFixed, denom) + PERSPECTIVE_VERTICAL_CENTER;
 
-            obstacleToRender.x = x_2D;
-            obstacleToRender.y = y_2D;
+            obstacleToRender.x2d = x_2D;
+            obstacleToRender.y2d = y_2D;
         } else if (direction == ObstacleDirection.Right) {
             x -= obstacle.offset;
+            obstacleToRender.x3dFP = x;
+            obstacleToRender.y3dFP = y;
+
             const x_2D = Math.idiv(x, denom) + this.perspectiveHorizontalCenter;
             const y_2D = Math.idiv(y - imageHeightFixed, denom) + PERSPECTIVE_VERTICAL_CENTER;
 
-            obstacleToRender.x = x_2D;
-            obstacleToRender.y = y_2D;
+            obstacleToRender.x2d = x_2D;
+            obstacleToRender.y2d = y_2D;
         } else if (direction == ObstacleDirection.Top) {
             y -= obstacle.offset;
+            obstacleToRender.x3dFP = x;
+            obstacleToRender.y3dFP = y;
+
             const x_2D = Math.idiv(x - Math.idiv(imageWidthFixed, 2), denom) + this.perspectiveHorizontalCenter;
             const y_2D = Math.idiv(y - imageHeightFixed, denom) + PERSPECTIVE_VERTICAL_CENTER;
 
-            obstacleToRender.x = x_2D;
-            obstacleToRender.y = y_2D;
+            obstacleToRender.x2d = x_2D;
+            obstacleToRender.y2d = y_2D;
         }
 
         this.obstaclesToRenders.push(obstacleToRender);

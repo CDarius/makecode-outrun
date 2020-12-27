@@ -145,12 +145,13 @@ class CarPhysics {
         const xPosFP = Math.imul(xPos, POS_FIXED_MATH_ONE);
         const distanceToXPos = xPosFP - this._carXPosFP;
 
-        let deltaXFP = Math.idiv(Math.imul(Math.imul(xPos, POS_FIXED_MATH_ONE), deltaT), 1000);
+        let deltaXFP = Math.idiv(Math.imul(Math.imul(speed, POS_FIXED_MATH_ONE), deltaT), 1000);
         if (deltaXFP > Math.abs(distanceToXPos))
             deltaXFP = distanceToXPos;
         else if (distanceToXPos < 0)
             deltaXFP = -deltaXFP;
 
+        let pippo = this._carXPosFP;
         this._carXPosFP += deltaXFP;
     }
 

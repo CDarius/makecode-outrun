@@ -53,7 +53,8 @@ game.onPaint(function() {
             else {
                 // Move the car back on road center
                 // when the explosion animation is done
-                carPhysics.moveToXPos(0, 50);
+                carPhysics.moveToXPos(0, 40);
+                const pippo = carPhysics.carXPos();
                 if (carPhysics.carXPos() == 0)
                     crashed = false;
             }
@@ -73,23 +74,24 @@ game.onPaint(function() {
         carPhysics.clear();        
 
     // Get player car horizontal position and set camera center
-    let carXPos = carPhysics.carXPos();
+    const carXPos = carPhysics.carXPos();
+    let carXPos2D: number;
     let perspectiveHorizontalCenter: number;
     if (carXPos >= 0) {
         if (carXPos > CAR_VIEWPORT) {
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT - carXPos;
-            carXPos = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
+            carXPos2D = SCREEN_HALF_WIDTH_PLUS_CAR_VIEWPORT
         } else {
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
-            carXPos = SCREEN_HALF_WIDTH + carXPos;
+            carXPos2D = SCREEN_HALF_WIDTH + carXPos;
         }
     } else {
         if (carXPos < (-CAR_VIEWPORT)) {
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT - carXPos;
-            carXPos = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
+            carXPos2D = SCREEN_HALF_WIDTH_MINUS_CAR_VIEWPORT;
         } else {
             perspectiveHorizontalCenter = SCREEN_HALF_WIDTH;
-            carXPos =  SCREEN_HALF_WIDTH + carXPos;
+            carXPos2D =  SCREEN_HALF_WIDTH + carXPos;
         }
     }
 
@@ -114,13 +116,13 @@ game.onPaint(function() {
     } else {
         carFrame = CAR_IMG_STRAIGHT;
     }
-    const carDrawX = carXPos - (carFrame.width >> 1);
+    const carDrawX = carXPos2D - (carFrame.width >> 1);
     const carDrawY = CAR_Y_POS - (carFrame.height >> 1);
     backgroundImg.drawTransparentImage(carFrame, carDrawX, carDrawY);
 
     // Draw car explosion animation
     if (!explosionAnimation.isDone()) {
-        explosionAnimation.draw(backgroundImg, carXPos, CAR_Y_POS);
+        explosionAnimation.draw(backgroundImg, carXPos2D, CAR_Y_POS);
     }
 
     // Draw HUD
@@ -133,16 +135,20 @@ game.onPaint(function() {
     countDownValue.draw(backgroundImg, SCREEN_HALF_WIDTH, countDownLabel.height() + 2, TextAlignment.Center);
     scoreTextLabel.draw(backgroundImg, SCREEN_WIDTH - 2, 1, TextAlignment.Right)
     scoreTextValue.draw(backgroundImg, SCREEN_WIDTH - 1, scoreTextLabel.height() + 2, TextAlignment.Right);
-});
 
-game.onUpdateInterval(30, function() {
-    if (crashed && explosionAnimation.isDone()) {
-        const carXPos = carPhysics.carXPos();
-        if (carXPos > 1) {
-            carPhysics.setCarXPos(carXPos - 2);
-        } else if (carXPos < -1) {
-            carPhysics.setCarXPos(carXPos + 2);
-        } else {
+    if (!crashed) {
+        // Check if car is outside the road
+        if (Math.imul(Math.abs(carXPos) + (carFrame.width >> 1), POS_FIXED_MATH_ONE) > STRIPE_HALF_WIDTH_FP) {
+            // Check for crash against obstacles
+            const colX1 = carXPos - (carFrame.width >> 1);
+            const colX2 = colX1 + carFrame.width;
+            const colY2 = Math.idiv(ROAD_INIT_Y, POS_FIXED_MATH_ONE) - (SCREEN_HEIGHT - CAR_Y_POS + (carFrame.height >> 1));
+            const colY1 = colY2 - carFrame.height;
+            if (worldRender.checkCollision(colX1, colY1, colX2, colY2, STRIPE_HEIGHT >> 1)) 
+            {
+                crashed = true;
+                explosionAnimation.begin();        
+            }
         }
     }
 });
@@ -152,20 +158,11 @@ game.onUpdateInterval(200, function() {
     info.showScore(false);
 });
 
-function startCarCrash(): void {
-    crashed = true;
-    explosionAnimation.begin();
-}
-
 pause(2000);
 countdown.start();
 running = true;
 
 while(!isOver) {
-    if (carPhysics.carXPos() < -70 && !crashed) {
-        startCarCrash();
-    }
-
     // Time over game end
     if (countdown.isExpired()) {    
         isOver = true;
