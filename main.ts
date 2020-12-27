@@ -59,11 +59,13 @@ game.onPaint(function() {
                     crashed = false;
             }
         } else {
+            const offRoad = Math.abs(Math.imul(carPhysics.carXPos(), POS_FIXED_MATH_ONE)) > STRIPE_HALF_WIDTH_FP;
             carPhysics.updateSpeed(
                 controller.A.isPressed(), 
                 controller.B.isPressed(),
                 controller.left.isPressed(),
-                controller.right.isPressed());
+                controller.right.isPressed(),
+                offRoad);
 
             const deltaDistance = carPhysics.deltaTraveledDistance();
             const oldDistance = carPhysics.traveledDistance() - deltaDistance;

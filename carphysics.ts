@@ -7,6 +7,8 @@ const CAR_X_MOVE_RANGE = Math.round(STRIPE_WIDTH * 1.4) * POS_FIXED_MATH_ONE;
 const CAR_X_MOVE_RANGE_P = Math.idiv(CAR_X_MOVE_RANGE, 2);
 const CAR_X_MOVE_RANGE_M = -CAR_X_MOVE_RANGE_P;
 
+const CAR_MAX_OFFROAD_SPEED = 80 * POS_FIXED_MATH_ONE;
+
 class CarAccelerationPoint {
     constructor(public speed: number, public acceleration: number) {        
     }
@@ -73,10 +75,17 @@ class CarPhysics {
         return Math.idiv(this._carXPosFP, POS_FIXED_MATH_ONE);
     }
 
-    public updateSpeed(accelerate: boolean, brake: boolean, turnLeft: boolean, turnRight: boolean): void {
+    public updateSpeed(accelerate: boolean, brake: boolean, turnLeft: boolean, turnRight: boolean, offRoad: boolean): void {
         const now = game.runtime();
         const deltaT = now - this._lastRun;
         this._lastRun = now;
+
+        if (offRoad && accelerate) {
+            if (this._speedFP > CAR_MAX_OFFROAD_SPEED) {
+                accelerate = false;
+                brake = true;
+            }
+        }
 
         // Update the speed
         if (brake) {
