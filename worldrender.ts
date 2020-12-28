@@ -41,6 +41,7 @@ class WorldRender {
     private stripeToggle: boolean;
     private backdropOffset: number;
     private perspectiveHorizontalCenter: number;
+    private oldTravelDistance: number;
 
     private obstaclesToRenders: RenderObstacle[];
 
@@ -96,6 +97,8 @@ class WorldRender {
         const maxTravelDistance = Math.imul(CIRCUIT.length - STRIPES_VIEW_PORT, STRIPE_HEIGHT);
         const firstStripeIndex = Math.idiv(travelDistance, STRIPE_HEIGHT);
         const firstStripeOffeset = travelDistance % STRIPE_HEIGHT;
+        const deltaTraveledDistace = travelDistance - this.oldTravelDistance;
+        this.oldTravelDistance = travelDistance;
 
         let circuitEndReached = false;
         if (travelDistance > maxTravelDistance) {
@@ -127,11 +130,16 @@ class WorldRender {
         targetImg.fillRect(0, 0, SCREEN_WIDTH, this.drawY , 9);
 
         // Draw backdrop image
-        let backdropOffset = this.backdropOffset - (((CIRCUIT[firstStripeIndex].direction) * 2) >> ANGLES_BITS);
-        if (backdropOffset < 0)
-            backdropOffset = SCREEN_WIDTH + backdropOffset;
-        else if (backdropOffset > SCREEN_WIDTH)
-            backdropOffset -= SCREEN_WIDTH;
+        let backdropOffset: number;
+        if (deltaTraveledDistace > 0) {
+            backdropOffset = this.backdropOffset - (((CIRCUIT[firstStripeIndex].direction) * 2) >> ANGLES_BITS);
+            if (backdropOffset < 0)
+                backdropOffset = SCREEN_WIDTH + backdropOffset;
+            else if (backdropOffset > SCREEN_WIDTH)
+                backdropOffset -= SCREEN_WIDTH;
+        } else {
+            backdropOffset = this.backdropOffset;
+        }
 
         targetImg.drawTransparentImage(BACKDROP_IMG, backdropOffset, this.drawY - BACKDROP_IMG.height);
         if (backdropOffset > 0)
