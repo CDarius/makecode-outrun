@@ -17,7 +17,9 @@ const BACKDROP_IMG = img`
     6666666666d666666666666666666666666646666666666666666666666666666666666666666666666666664666666666b666666666666646666666666b46666666b466666666666666666666666666
     6d66666666666666646666666d666b6666b666b66b6b66b666b66666b66b6b6b66b6666b6666b66b6b6b6b6b6b66b666b6666b66b666b6b6b6b6b6b6b666666b6666666666b6b6b66b666b666b666b66
 `
-    
+const EXPLOSION_MELODY_1 = new music.Melody("~11 !60,150 !100,50 !80,100 !60,150 !100,50 !80,100 !60,150 !100,250 !80,150 !60,350 !100,150 !80,150 @0,0,255,200 !60,150");
+const EXPLOSION_MELODY_2 = new music.Melody("~13 !80,50 !60,150 !100,150 !80,150 !60,150 !100,150 !80,150 !60,150 !100,150 !80,150 !60,150 !100,150 @0,0,255,200 !80,100");
+
 info.setScore(0);
 info.showScore(false);
 const countdown = new Countdown();
@@ -31,6 +33,9 @@ let crashed = false;
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
 const explosionAnimation = new ExplosionAnimation(40, 10, 2000, CAR_EXPLOSION_FRAMES);
+const melodyPlayer1 = new music.MelodyPlayer(EXPLOSION_MELODY_1);
+const melodyPlayer2 = new music.MelodyPlayer(EXPLOSION_MELODY_2);
+
 
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
@@ -148,7 +153,13 @@ game.onPaint(function() {
             if (worldRender.checkCollision(colX1, colY1, colX2, colY2, STRIPE_HEIGHT >> 1)) 
             {
                 crashed = true;
-                explosionAnimation.begin();        
+                control.runInParallel(function() {
+                    melodyPlayer1.play(120);
+                });
+                control.runInParallel(function() {
+                    melodyPlayer2.play(120);
+                });
+                explosionAnimation.begin();  
             }
         }
     }
