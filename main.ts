@@ -19,6 +19,7 @@ const BACKDROP_IMG = img`
 `
 const EXPLOSION_MELODY_1 = new music.Melody("~11 !60,150 !100,50 !80,100 !60,150 !100,50 !80,100 !60,150 !100,250 !80,150 !60,350 !100,150 !80,150 @0,0,255,200 !60,150");
 const EXPLOSION_MELODY_2 = new music.Melody("~13 !80,50 !60,150 !100,150 !80,150 !60,150 !100,150 !80,150 !60,150 !100,150 !80,150 !60,150 !100,150 @0,0,255,200 !80,100");
+const EXPLOSION_MELODY_3 = new music.Melody("~5 !80,2000");
 
 info.setScore(0);
 info.showScore(false);
@@ -35,7 +36,7 @@ const carPhysics = new CarPhysics();
 const explosionAnimation = new ExplosionAnimation(40, 10, 2000, CAR_EXPLOSION_FRAMES);
 const melodyPlayer1 = new music.MelodyPlayer(EXPLOSION_MELODY_1);
 const melodyPlayer2 = new music.MelodyPlayer(EXPLOSION_MELODY_2);
-
+const melodyPlayer3 = new music.MelodyPlayer(EXPLOSION_MELODY_3);
 
 const doubledFont = image.scaledFont(image.font8, 2);
 const speedTextLabel = new TextRender("SPEED", 1, 3);
@@ -154,10 +155,13 @@ game.onPaint(function() {
             {
                 crashed = true;
                 control.runInParallel(function() {
-                    melodyPlayer1.play(120);
+                    melodyPlayer1.play(170);
                 });
                 control.runInParallel(function() {
-                    melodyPlayer2.play(120);
+                    melodyPlayer2.play(170);
+                });
+                control.runInParallel(function() {
+                    melodyPlayer3.play(90);
                 });
                 explosionAnimation.begin();  
             }
