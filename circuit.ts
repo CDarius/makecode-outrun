@@ -31,7 +31,7 @@ class CircuitSegment {
 }
 
 const CIRCUIT = [
-    new CircuitSegment(DIR_STRAIGHT, SLOPE_FLAT, OBST_PALM_TREE_L, OBST_PALM_TREE_L, null, 13, 13),
+    new CircuitSegment(DIR_STRAIGHT, SLOPE_FLAT, OBST_SEMAPHORE_SIGN, OBST_PALM_TREE_L, null, 13, 13),
     new CircuitSegment(DIR_STRAIGHT, SLOPE_FLAT, OBST_TRELLIS, OBST_TRELLIS, OBST_START_SIGN, 13, 13),
     new CircuitSegment(DIR_STRAIGHT, SLOPE_FLAT, OBST_PALM_TREE_L, OBST_PALM_TREE_L, null, 13, 13),
     new CircuitSegment(DIR_STRAIGHT, SLOPE_FLAT, OBST_PALM_TREE_L, OBST_PALM_TREE_L, null, 13, 13),

@@ -30,6 +30,7 @@ let running = false;
 let isOver = false;
 let endReached = false;
 let crashed = false;
+let showCar = false;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
@@ -125,7 +126,8 @@ game.onPaint(function() {
     }
     const carDrawX = carXPos2D - (carFrame.width >> 1);
     const carDrawY = CAR_Y_POS - (carFrame.height >> 1);
-    backgroundImg.drawTransparentImage(carFrame, carDrawX, carDrawY);
+    if (showCar) 
+        backgroundImg.drawTransparentImage(carFrame, carDrawX, carDrawY);
 
     // Draw car explosion animation
     if (!explosionAnimation.isDone()) {
@@ -143,7 +145,7 @@ game.onPaint(function() {
     scoreTextLabel.draw(backgroundImg, SCREEN_WIDTH - 2, 1, TextAlignment.Right)
     scoreTextValue.draw(backgroundImg, SCREEN_WIDTH - 1, scoreTextLabel.height() + 2, TextAlignment.Right);
 
-    if (!crashed) {
+    if (!crashed && showCar) {
         // Check if car is outside the road
         if (Math.imul(Math.abs(carXPos) + (carFrame.width >> 1), POS_FIXED_MATH_ONE) > STRIPE_HALF_WIDTH_FP) {
             // Check for crash against obstacles
@@ -169,26 +171,61 @@ game.onPaint(function() {
     }
 });
 
-game.onUpdateInterval(200, function() {
-    info.changeScoreBy(Math.idiv(carPhysics.speed(), 20));
-    info.showScore(false);
-});
+function beginSequence(): void {
+    // Show car entering the scene
+    let carSprite = sprites.create(CAR_IMG_SIDE_L);
+    carSprite.x = 200;
+    carSprite.y = CAR_Y_POS;
+    carSprite.vx = -100;
+    while (carSprite.x > SCREEN_HALF_WIDTH)
+        pause(10);
+    carSprite.vx = 0;
+    carSprite.x = SCREEN_HALF_WIDTH;
 
-pause(2000);
+    carSprite.setImage(CAR_IMG_LEFT_2);
+    carSprite.x = SCREEN_HALF_WIDTH;
+    pause(100);
+    carSprite.setImage(CAR_IMG_LEFT);
+    carSprite.x = SCREEN_HALF_WIDTH;
+    pause(100);
+    carSprite.setImage(CAR_IMG_STRAIGHT);
+    carSprite.x = SCREEN_HALF_WIDTH;
+    showCar = true;
+    pause(100);
+    carSprite.destroy();    
+    
+    // Start countdown
+    music.setVolume(255);
+    music.setTempo(60);
+    OBST_SEMAPHORE_SIGN.image = OBST_IMG_SEMAPHORE_RED_1;
+    music.playMelody("C5:1 R:4", 60);
+    OBST_SEMAPHORE_SIGN.image = OBST_IMG_SEMAPHORE_RED_2;
+    music.playMelody("C5:1 R:4", 60);
+    OBST_SEMAPHORE_SIGN.image = OBST_IMG_SEMAPHORE_GREEN;
+    control.runInParallel(function() {
+        music.playMelody("A5:4", 60);        
+    });
+}
+
+beginSequence();
 countdown.start();
 running = true;
 
-while(!isOver) {
-    // Time over game end
-    if (countdown.isExpired()) {    
-        isOver = true;
-        game.over();            
-    }
+game.onUpdateInterval(200, function() {
+    if (!isOver) {
+        info.changeScoreBy(Math.idiv(carPhysics.speed(), 20));
+        info.showScore(false);
 
-    // Circuit end reached. Game won
-    if (endReached) {        
-        isOver = true;
-        game.over(true, effects.confetti);
+        // Time over game end
+        if (countdown.isExpired()) {    
+            isOver = true;
+            game.over();            
+        }
+
+        // Circuit end reached. Game won
+        if (endReached) {        
+            isOver = true;
+            game.over(true, effects.confetti);
+        }
     }
-    pause(200);
-}
+});
