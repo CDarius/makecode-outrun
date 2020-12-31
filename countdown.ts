@@ -18,6 +18,17 @@ class Countdown {
             this.start();
     }
 
+    public add(seconds: number): void {
+        const wasRunning = this.running;
+        if (wasRunning)
+            this.stop();
+
+        this.loadTime += Math.round(seconds * 1000);
+
+        if (wasRunning)
+            this.start();
+    }
+
     public isExpired(): boolean {
         if (this.running)
             return this.endTime < game.runtime();

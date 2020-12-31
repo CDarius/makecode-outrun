@@ -31,6 +31,7 @@ let isOver = false;
 let endReached = false;
 let crashed = false;
 let showCar = false;
+let timeExtended = false;
 
 const worldRender = new WorldRender();
 const carPhysics = new CarPhysics();
@@ -105,7 +106,8 @@ game.onPaint(function() {
 
     // Draw the world
     const backgroundImg = scene.backgroundImage();
-    endReached = worldRender.draw(backgroundImg, carPhysics.traveledDistance() , perspectiveHorizontalCenter);
+    const traveledDistance = carPhysics.traveledDistance();
+    endReached = worldRender.draw(backgroundImg, traveledDistance , perspectiveHorizontalCenter);
 
     if (endReached) {
         carPhysics.setSpeed(0);
@@ -168,6 +170,15 @@ game.onPaint(function() {
                 explosionAnimation.begin();  
             }
         }
+    }
+
+    // Extend time on check sign
+    if (!timeExtended && worldRender.onCheckSign(traveledDistance)) {
+        timeExtended = true;
+        countdown.add(30);
+        control.runInParallel(function() {
+            music.playMelody("B5:2 R:1 B5:2 R:1 B5:2", 160);            
+        })
     }
 });
 

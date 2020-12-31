@@ -93,6 +93,12 @@ class WorldRender {
         return false;
     }
 
+    public onCheckSign(travelDistance: number): boolean {
+        const firstStripeIndex = Math.idiv(travelDistance, STRIPE_HEIGHT);
+        return CIRCUIT[firstStripeIndex].centerObstacle == OBST_CHECK_SIGN
+            || CIRCUIT[firstStripeIndex + 1].centerObstacle == OBST_CHECK_SIGN;
+    }
+
     public draw(targetImg: Image, travelDistance: number, perspectiveHorizontalCenter: number): boolean {
         const maxTravelDistance = Math.imul(CIRCUIT.length - STRIPES_VIEW_PORT, STRIPE_HEIGHT);
         const firstStripeIndex = Math.idiv(travelDistance, STRIPE_HEIGHT);
